@@ -1,4 +1,5 @@
 const Product = require("../models/ProductModel");
+const { getPostData } = require("../utils");
 
 /**
  * 
@@ -59,32 +60,24 @@ async function getProduct(request, response, id) {
  */
 async function createProduct(request, response) {
     try {
-        let body = "";
+        
+        const body = await getPostData(request);
 
-        request.on("data", chunk => body += chunk.toString());
+        const { name, description, price } = JSON.parse(body);
 
-        request.on("end", async () => {
+        const product = {
+            name,
+            description,
+            price
+        };
 
-            const {
-                name,
-                description,
-                price
-            } = JSON.parse(body);
+        const newProduct = await Product.create(product);
 
-            const product = {
-                name,
-                description,
-                price
-            };
-
-            const newProduct = await Product.create(product);
-
-            response.writeHead(201, {
-                "Content-Type": "application/json"
-            });
-
-            return response.end(JSON.stringify(newProduct));
+        response.writeHead(201, {
+            "Content-Type": "application/json"
         });
+
+        return response.end(JSON.stringify(newProduct));
     } catch (error) {
         console.log(error);
     }
