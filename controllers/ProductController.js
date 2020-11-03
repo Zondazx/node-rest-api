@@ -1,5 +1,7 @@
 const Product = require("../models/ProductModel");
-const { getPostData } = require("../utils");
+const {
+    getPostData
+} = require("../utils");
 
 /**
  * 
@@ -60,10 +62,14 @@ async function getProduct(request, response, id) {
  */
 async function createProduct(request, response) {
     try {
-        
+
         const body = await getPostData(request);
 
-        const { name, description, price } = JSON.parse(body);
+        const {
+            name,
+            description,
+            price
+        } = JSON.parse(body);
 
         const product = {
             name,
@@ -83,8 +89,90 @@ async function createProduct(request, response) {
     }
 }
 
+/**
+ * 
+ * @param {*} request 
+ * @param {*} response 
+ * @desc Updates a Product
+ * @route PUT /api/products/:id
+ */
+async function updateProduct(request, response, id) {
+    try {
+
+        const product = await Product.findById(id);
+
+        if (!product) {
+            response.writeHead(404, {
+                "Content-Type": "application/json"
+            });
+            response.end(JSON.stringify({
+                message: "Product Not Found"
+            }));
+        } else {
+            const body = await getPostData(request);
+
+            const {
+                name,
+                description,
+                price
+            } = JSON.parse(body);
+
+            const productData = {
+                name: name || product.name,
+                description: description || product.description,
+                price: price || product.price
+            };
+
+            const updatedProduct = await Product.update(id, productData);
+
+            response.writeHead(200, {
+                "Content-Type": "application/json"
+            });
+
+            return response.end(JSON.stringify(updatedProduct));
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+/**
+ * 
+ * @param {*} request 
+ * @param {*} response 
+ * @param {*} id of the requested product
+ * @desc Deletes the requested product
+ * @route DELETE /api/products/:id
+ */
+async function deleteProduct(request, response, id) {
+    try {
+        const product = await Product.findById(id);
+
+        if (!product) {
+            response.writeHead(404, {
+                "Content-Type": "application/json"
+            });
+            response.end(JSON.stringify({
+                message: "Product Not Found"
+            }));
+        } else {
+            
+            await Product.remove(id);
+
+            response.writeHead(200, {
+                "Content-Type": "application/json"
+            });
+            response.end(JSON.stringify({ message: `Product ${id} removed.`}));
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 module.exports = {
     getProducts,
     getProduct,
-    createProduct
+    createProduct,
+    updateProduct,
+    deleteProduct
 };
